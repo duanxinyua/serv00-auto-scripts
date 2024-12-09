@@ -39,7 +39,10 @@ async function sendTelegramMessage(token, chatId, message) {
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
-    let allLoginMessages = []; // 用来收集所有登录成功的信息
+    const timestamp = formatToISO(new Date());
+
+    // 存储每个账号的登录状态信息
+    let loginMessages = [];
 
     for (const account of accounts) {
         const { username, password, panel, addr } = account;
@@ -47,69 +50,54 @@ async function sendTelegramMessage(token, chatId, message) {
         const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
 
-        let url = `https://${panel}/login/?next=/`;
+        let loginStatus = "登录失败";  // 默认是登录失败
 
         try {
+            let url = `https://${panel}/login/?next=/`;
             await page.goto(url);
 
             const usernameInput = await page.$('#id_username');
             if (usernameInput) {
                 await usernameInput.click({ clickCount: 3 });
-                await usernameInput.press('Backspace');
+                await usernameInput.type(username);
             }
-            await page.type('#id_username', username);
-            await page.type('#id_password', password);
 
-            const loginButton = await page.$('#submit');
+            const passwordInput = await page.$('#id_password');
+            if (passwordInput) {
+                await passwordInput.click({ clickCount: 3 });
+                await passwordInput.type(password);
+            }
+
+            const loginButton = await page.$('button[type="submit"]');
             if (loginButton) {
                 await loginButton.click();
-            } else {
-                throw new Error('无法找到登录按钮');
             }
 
-            await page.waitForNavigation();
+            // 等待登录成功的页面变化
+            await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-            const isLoggedIn = await page.evaluate(() => {
-                const logoutButton = document.querySelector('a[href="/logout/"]');
-                return logoutButton !== null;
-            });
-
-            const nowUtc = formatToISO(new Date());
-            const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000)); // 北京时间东8区
-            
-            // 判断 addr 是否存在，存在就加到消息内容前面
-            let messagePrefix = '';
-            if (addr) {
-                messagePrefix = `${addr} `;
+            // 检查是否登录成功，可以根据页面的变化来判断
+            const successIndicator = await page.$('.some-success-indicator'); // 请根据实际情况修改
+            if (successIndicator) {
+                loginStatus = "登录成功";
             }
 
-            if (isLoggedIn) {
-                const loginMessage = `账号 ${messagePrefix}${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`;
-                allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
-            } else {
-                console.error(`账号 ${username} 登录失败，请检查账号和密码是否正确。`);
-                const loginMessage = `账号 ${messagePrefix}${username} 登录失败，请检查账号和密码是否正确。`;
-                allLoginMessages.push(loginMessage); // 收集失败信息
-            }
-        } catch (error) {
-            console.error(`账号 ${username} 登录时出现错误: ${error}`);
-            const errorMessage = `账号 ${username} 登录时出现错误: ${error.message}`;
-            allLoginMessages.push(errorMessage); // 收集错误信息
-        } finally {
-            await page.close();
             await browser.close();
 
-            // 模拟延时
-            const delay = Math.floor(Math.random() * 5000) + 1000; // 随机延时1秒到5秒之间
-            await delayTime(delay);
+        } catch (error) {
+            console.error(`处理账户 ${username} 时发生错误:`, error);
+            loginStatus = "登录失败";
+            await browser.close();
         }
+
+        // 构建每个账号的登录状态信息
+        const accountMessage = addr ? `账号 ${addr}-${username} ${loginStatus}` : `账号 ${username} ${loginStatus}`;
+        loginMessages.push(accountMessage);
     }
 
-    // 发送所有的登录信息到 Telegram
-    if (telegramToken && telegramChatId && allLoginMessages.length > 0) {
-        const finalMessage = allLoginMessages.join('\n');
-        await sendTelegramMessage(telegramToken, telegramChatId, finalMessage);
-    }
+    // 组合最终的消息内容
+    const finalMessage = `${timestamp} 账号登录结果：\n` + loginMessages.join("\n");
 
-    console.log('所有账号登录完成！');
+    // 发送 Telegram 消息
+    await sendTelegramMessage(telegramToken, telegramChatId, finalMessage);
 })();
