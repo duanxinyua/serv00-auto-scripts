@@ -16,9 +16,8 @@ async function sendTelegramMessage(token, chatId, message) {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const data = {
         chat_id: chatId,
-        text: message,
+        text: message
     };
-
     try {
         const response = await axios.post(url, data);
         console.log('消息已发送到 Telegram');
@@ -30,6 +29,7 @@ async function sendTelegramMessage(token, chatId, message) {
         } else {
             console.error('发送 Telegram 消息时出错:', error.message);
         }
+        console.error('Telegram 消息发生失败');
     }
 }
 
@@ -42,10 +42,11 @@ async function sendTelegramMessage(token, chatId, message) {
     const results = [];
 
     for (const account of accounts) {
-        const { username, password, panel } = account;
+        const { username, password, panel, addr } = account;
 
         const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
+
         let url = `https://${panel}/login/?next=/`;
 
         try {
@@ -77,24 +78,22 @@ async function sendTelegramMessage(token, chatId, message) {
             const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000)); // 北京时间东8区
 
             if (isLoggedIn) {
-                console.log(`账号 ${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
-                results.push(`账号 ${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
+                console.log(`账号 ${addr}-${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
+                results.push(`账号 ${addr}-${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
             } else {
-                console.error(`账号 ${username} 登录失败，请检查账号和密码是否正确。`);
-                results.push(`账号 ${username} 登录失败，请检查账号和密码是否正确。`);
+                console.error(`账号 ${addr}-${username} 登录失败，请检查账号和密码是否正确。`);
+                results.push(`账号 ${addr}-${username} 登录失败，请检查账号和密码是否正确。`);
             }
         } catch (error) {
-            console.error(`账号 ${username} 登录时出现错误: ${error}`);
-            results.push(`账号 ${username} 登录时出现错误: ${error.message}`);
+            console.error(`账号 ${addr}-${username} 登录时出现错误: ${error}`);
+            results.push(`账号 ${addr}-${username} 登录时出现错误: ${error.message}`);
         } finally {
             await page.close();
             await browser.close();
-            const delay = Math.floor(Math.random() * 5000) + 1000; // 随机延时1秒到5秒之间
+            const delay = Math.floor(Math.random() * 5000) + 1000;
             await delayTime(delay);
         }
     }
-
-    console.log('所有账号登录完成！');
 
     if (telegramToken && telegramChatId) {
         const MAX_LENGTH = 4000;
@@ -112,4 +111,6 @@ async function sendTelegramMessage(token, chatId, message) {
             await sendTelegramMessage(telegramToken, telegramChatId, currentMessage);
         }
     }
+
+    console.log('所有账号登录完成！');
 })();
