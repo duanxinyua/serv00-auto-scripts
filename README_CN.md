@@ -42,15 +42,15 @@
 
 ``` json
 [  
-  { "username": "qishihuang", "password": "zhanghao", "panel": "panel3.serv00.com" },  
-  { "username": "zhaogao", "password": "daqinzhonggong", "panel": "panel1.serv00.com" },  
-  { "username": "heiheihei", "password": "shaibopengke", "panel": "panel.ct8.pl" }  
+  { "username": "qishihuang", "password": "zhanghao", "panel": "panel3.serv00.com" , "addr": ""},  
+  { "username": "zhaogao", "password": "daqinzhonggong", "panel": "panel1.serv00.com" , "addr": ""},  
+  { "username": "heiheihei", "password": "shaibopengke", "panel": "panel.ct8.pl" , "addr": ""}  
 ]
 ```
 
 > 其中`panel`参数为面板域名，即为你所收到注册邮件的`panel*.serv00.com`值。
 
-4. **非必须** 创建Telegram 机器人两个参数的 `Secret`：`TELEGRAM_BOT_TOKEN` 和  `TELEGRAM_CHAT_ID`
+4. **非必须** 创建Telegram 机器人两个参数的 `Secret`：`TELEGRAM_BOT_TOKEN` 和  `TELEGRAM_CHAT_ID`；addr我这里作为地区中文填写，如果发送TG消息会带有这个参数，可为空。
 
 ## SSH登录不上
 
