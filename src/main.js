@@ -37,9 +37,13 @@ async function sendTelegramMessage(token, chatId, message) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID);
 
     const results = [];
+
+    // 获取当前时间
+    const nowUtc = formatToISO(new Date());
+    const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000)); // 北京时间东8区
 
     for (const account of accounts) {
         const { username, password, panel, addr } = account;
@@ -74,15 +78,12 @@ async function sendTelegramMessage(token, chatId, message) {
                 return logoutButton !== null;
             });
 
-            const nowUtc = formatToISO(new Date());
-            const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000)); // 北京时间东8区
-
             if (isLoggedIn) {
                 console.log(`账号 ${addr}-${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
-                results.push(`账号 ${addr}-${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
+                results.push(`账号 ${addr}-${username} 登录成功`);
             } else {
                 console.error(`账号 ${addr}-${username} 登录失败，请检查账号和密码是否正确。`);
-                results.push(`账号 ${addr}-${username} 登录失败，请检查账号和密码是否正确。`);
+                results.push(`账号 ${addr}-${username} 登录失败`);
             }
         } catch (error) {
             console.error(`账号 ${addr}-${username} 登录时出现错误: ${error}`);
@@ -95,21 +96,12 @@ async function sendTelegramMessage(token, chatId, message) {
         }
     }
 
+    // 合并所有消息
+    const message = `北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）账号登录结果：\n` + results.join('\n');
+
+    // 发送Telegram消息
     if (telegramToken && telegramChatId) {
-        const MAX_LENGTH = 4000;
-        let currentMessage = '';
-
-        for (const result of results) {
-            if ((currentMessage + result + '\n').length > MAX_LENGTH) {
-                await sendTelegramMessage(telegramToken, telegramChatId, currentMessage);
-                currentMessage = '';
-            }
-            currentMessage += result + '\n';
-        }
-
-        if (currentMessage) {
-            await sendTelegramMessage(telegramToken, telegramChatId, currentMessage);
-        }
+        await sendTelegramMessage(telegramToken, telegramChatId, message);
     }
 
     console.log('所有账号登录完成！');
