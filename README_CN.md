@@ -8,7 +8,7 @@
 
 <h1> serv00-auto-scripts </h1>
 
-<p>Serv00/CT8 - 免费主机自动续期（自动SSH以及PM2）及其他脚本。</p>
+<p>Serv00/CT8 - 免费主机自动续期脚本。</p>
 
 </div>
 
@@ -50,7 +50,7 @@
 
 > 其中`panel`参数为面板域名，即为你所收到注册邮件的`panel*.serv00.com`值。
 
-4. **非必须** 创建Telegram 机器人两个参数的 `Secret`：`TELEGRAM_BOT_TOKEN` 和  `TELEGRAM_CHAT_ID`；addr我这里作为地区中文填写，如果发送TG消息会带有这个参数，可为空。
+4. **非必须** 创建Telegram 机器人两个参数的 `Secret`：`TELEGRAM_BOT_TOKEN` 和  `TELEGRAM_CHAT_ID`；addr我填写备注，如果发送TG消息会带有这个参数，可为空。
 
 ## SSH登录不上
 
