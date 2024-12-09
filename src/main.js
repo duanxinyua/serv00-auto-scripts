@@ -23,13 +23,13 @@ async function sendTelegramMessage(token, chatId, message) {
         // console.log('消息已发送到 Telegram:', response.data);
         console.log('消息已发送到 Telegram');
     } catch (error) {
-        // if (error.response) {
-        //     console.error('发送 Telegram 消息时出错:', error.response.status, error.response.data);
-        // } else if (error.request) {
-        //     console.error('发送 Telegram 消息时出错:', error.request);
-        // } else {
-        //     console.error('发送 Telegram 消息时出错:', error.message);
-        // }
+        if (error.response) {
+            console.error('发送 Telegram 消息时出错:', error.response.status, error.response.data);
+        } else if (error.request) {
+            console.error('发送 Telegram 消息时出错:', error.request);
+        } else {
+            console.error('发送 Telegram 消息时出错:', error.message);
+        }
         console.error('Telegram 消息发生失败');
     }
 }
