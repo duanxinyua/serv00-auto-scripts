@@ -37,7 +37,7 @@ async function sendTelegramMessage(token, chatId, message) {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID);
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
     const results = [];
 
