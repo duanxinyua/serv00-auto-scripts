@@ -85,11 +85,11 @@ async function sendTelegramMessage(token, chatId, message) {
             }
 
             if (isLoggedIn) {
-                const loginMessage = `账号 ${messagePrefix}${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`;
+                const loginMessage = `账号 ${messagePrefix}${username} 登录成功！`;
                 allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
             } else {
                 console.error(`账号 ${username} 登录失败，请检查账号和密码是否正确。`);
-                const loginMessage = `账号 ${messagePrefix}${username} 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录失败，请检查账号和密码是否正确。`;
+                const loginMessage = `账号 ${messagePrefix}${username} 登录失败，请检查账号和密码是否正确。`;
                 allLoginMessages.push(loginMessage); // 收集失败信息
             }
         } catch (error) {
