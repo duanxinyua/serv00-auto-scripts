@@ -85,6 +85,7 @@ async function sendTelegramMessage(token, chatId, message) {
             }
 
             if (isLoggedIn) {
+                console.log(`账号 ${messagePrefix}${username} 登录成功！`);
                 const loginMessage = `账号 ${messagePrefix}${username} 登录成功！`;
                 allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
             } else {
