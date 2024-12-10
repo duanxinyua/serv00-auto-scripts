@@ -19,20 +19,38 @@ async function sendTelegramMessage(token, chatId, message) {
         chat_id: chatId,
         text: message
     };
-    try {
-        const response = await axios.post(url, data);
-        console.log('消息已发送到 Telegram');
-    } catch (error) {
-        if (error.response) {
-            console.error('发送 Telegram 消息时出错:', error.response.status, error.response.data);
-        } else if (error.request) {
-            console.error('发送 Telegram 消息时出错:', error.request);
-        } else {
-            console.error('发送 Telegram 消息时出错:', error.message);
+
+    let retryCount = 0;
+    const maxRetries = 5; // 最大重试次数
+    const retryDelay = 10000; // 每次重试之间的延时（10秒）
+
+    while (retryCount <= maxRetries) {
+        try {
+            const response = await axios.post(url, data);
+            console.log('消息已发送到 Telegram');
+            return; // 如果发送成功，退出函数
+        } catch (error) {
+            retryCount++;
+
+            if (retryCount > maxRetries) {
+                console.error('已达到最大重试次数，消息发送失败。');
+                return;
+            }
+
+            if (error.response) {
+                console.error('发送 Telegram 消息时出错:', error.response.status, error.response.data);
+            } else if (error.request) {
+                console.error('发送 Telegram 消息时出错:', error.request);
+            } else {
+                console.error('发送 Telegram 消息时出错:', error.message);
+            }
+
+            console.error(`消息发送失败，${retryDelay / 1000}秒后重试... (${retryCount}/${maxRetries})`);
+            await delayTime(retryDelay); // 等待指定时间后重试
         }
-        console.error('Telegram 消息发生失败');
     }
 }
+
 
 (async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
