@@ -4,6 +4,7 @@ import puppeteer from 'puppeteer';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
 
+
 function formatToISO(date) {
     return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}Z/, '');
 }
@@ -12,7 +13,7 @@ async function delayTime(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function sendTelegramMessage(token, chatId, message) {
+async function sendTelegramMessage(token, chatId, message = "测试消息") {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const data = {
         chat_id: chatId,
