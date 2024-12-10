@@ -13,7 +13,7 @@ async function delayTime(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function sendTelegramMessage(token, chatId, message = "测试消息") {
+async function sendTelegramMessage(token, chatId, message) {
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const data = {
         chat_id: chatId,
