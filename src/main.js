@@ -57,6 +57,8 @@ async function sendTelegramMessage(token, chatId, message) {
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    
+    let zhanghao = 0;
 
     let allLoginMessages = []; // 用来收集所有登录成功的信息
 
@@ -104,12 +106,14 @@ async function sendTelegramMessage(token, chatId, message) {
             }
 
             if (isLoggedIn) {
-                console.log(`账号 ${messagePrefix}${username} 登录成功！`);
-                const loginMessage = `账号 ${messagePrefix}${username} 登录成功！`;
+                zhanghao++;
+                console.log(`${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`);
+                const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
                 allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
             } else {
-                console.error(`账号 ${username} 登录失败，请检查账号和密码是否正确。`);
-                const loginMessage = `账号 ${messagePrefix}${username} 登录失败，请检查账号和密码是否正确。`;
+                zhanghao++;
+                console.error(`${zhanghao} 账号 ${username} 登录失败，请检查账号和密码是否正确。`);
+                const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录失败，请检查账号和密码是否正确。`;
                 allLoginMessages.push(loginMessage); // 收集失败信息
             }
         } catch (error) {
