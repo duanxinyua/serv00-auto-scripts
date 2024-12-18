@@ -3,7 +3,8 @@ name: Serv00/CT8 Login Tasks
 on:
   workflow_dispatch:
   schedule:
-  - cron: "0 1 * * 1-5"  # UTC时间凌晨1点触发，即北京时间上午9点
+  #- cron: "0 1 * * 1-5"  # UTC时间凌晨1点触发，即北京时间上午9点
+  - cron: "0 21 * * 1-5"  # UTC时间晚上9点触发，即北京时间上午5点
 
   # push:
   #   paths-ignore:
