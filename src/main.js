@@ -194,18 +194,18 @@ async function connectSSH({ host, username, password }) {
                 const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
                 console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
 
-                try {
-                    const result = await connectSSH({
-                        host: sshHost,
-                        username,
-                        password,
-                    });
-                    console.log(result);
-                    allLoginMessages.push(loginMessage + ' 保活成功');
-                } catch (error) {
-                    console.error(`SSH 登录或命令执行失败: ${error}`);
-                    allLoginMessages.push(loginMessage + ' 保活失败');
-                }
+                // try {
+                //     const result = await connectSSH({
+                //         host: sshHost,
+                //         username,
+                //         password,
+                //     });
+                //     console.log(result);
+                //     allLoginMessages.push(loginMessage + ' 保活成功');
+                // } catch (error) {
+                //     console.error(`SSH 登录或命令执行失败: ${error}`);
+                //     allLoginMessages.push(loginMessage + ' 保活失败');
+                // }
 
             } else {
                 zhanghao++;
