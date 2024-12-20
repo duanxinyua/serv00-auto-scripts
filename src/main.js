@@ -3,7 +3,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
-import { Client } from 'ssh2';
+import { Client } from 'ssh2';  // 引入 ssh2 库
 
 function formatToISO(date) {
     return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}Z/, '');
@@ -51,6 +51,66 @@ async function sendTelegramMessage(token, chatId, message) {
     }
 }
 
+async function connectSSH({ host, username, password }) {
+    return new Promise((resolve, reject) => {
+        const client = new Client();
+
+        client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
+            console.log('Keyboard Interactive 身份验证触发');
+            finish([password]); // 使用密码作为响应
+        });
+        
+        client.on('ready', () => {
+            console.log(`成功登录到 ${host}`);
+            client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
+                if (err) {
+                    reject(`SSH 执行命令失败: ${err.message}`);
+                    return;
+                }
+                let enterPressed = false; // 用来标记是否已经按下回车
+                stream
+                    .on('close', (code, signal) => {
+                        console.log('命令执行完成');
+                        client.end();
+                        resolve('命令执行成功！');
+                    })
+                    .on('data', (data) => {
+                        console.log('输出: ' + data.toString());
+        
+                        // 检查是否出现了需要启动的提示
+                        if (data.includes('nezha-agent 已启动！')) {
+                            console.log('保活成功！');
+                        } else if (!enterPressed && data.includes('nezha-agent 已经准备就绪，请按下回车键启动')) {
+                            console.log('检测到需要按下回车键，模拟按下回车键');
+                            stream.write('\r'); // 模拟按下回车键
+                            enterPressed = true; // 标记回车键已按下
+                        }
+                    })
+                    .stderr.on('data', (data) => {
+                        console.error('错误输出: ' + data.toString());
+                    });
+            });
+        });
+
+
+        client.on('error', (err) => {
+            reject(`SSH 连接出错: ${err.message}`);
+        });
+
+        client.on('end', () => {
+            console.log(`SSH 连接关闭: ${host}`);
+        });
+
+        client.connect({
+            host,
+            port: 22, // 默认端口，可以根据需要调整
+            username,
+            password,
+            tryKeyboard: true, // 启用 Keyboard Interactive
+        });
+    });
+}
+
 (async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
@@ -58,6 +118,7 @@ async function sendTelegramMessage(token, chatId, message) {
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
     
     let zhanghao = 0;
+
     let allLoginMessages = []; // 用来收集所有登录成功的信息
 
     // 获取当前时间
@@ -107,51 +168,22 @@ async function sendTelegramMessage(token, chatId, message) {
                 zhanghao++;
                 console.log(`${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`);
                 const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
-                allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
 
-                // SSH 登录并执行命令
-                const sshClient = new Client();
-                sshClient.on('ready', () => {
-                    console.log(`尝试通过 SSH 登录 ${panel} 并执行命令。`);
-                    sshClient.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
-                        if (err) {
-                            console.log(`SSH 执行命令失败: ${err.message}`);
-                            sshClient.end();
-                            return;
-                        }
+                const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
+                console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
 
-                        let enterPressCount = 0; // 计数器，用来记录已按下回车键的次数
-                        stream
-                            .on('close', (code, signal) => {
-                                console.log('命令执行完成');
-                                sshClient.end();
-                                resolve('命令执行成功！');
-                            })
-                            .on('data', (data) => {
-                                console.log('输出: ' + data.toString());
-                                
-                                // 检查是否需要按下回车键
-                                if (data.includes('nezha-agent 已经准备就绪，请按下回车键启动')) {
-                                    console.log('检测到需要按下回车键，模拟按下回车键');
-                                    stream.write('\r'); // 模拟按下回车键
-                                    enterPressCount++; // 增加回车次数
-                                }
-                                // 如果已经启动 agent，可以停止按回车
-                                if (data.includes('nezha-agent 已启动！') && enterPressCount > 0) {
-                                    console.log('保活成功！');
-                                }
-                            })
-                            .stderr.on('data', (data) => {
-                                console.error('错误输出: ' + data.toString());
-                            });
+                try {
+                    const result = await connectSSH({
+                        host: sshHost,
+                        username,
+                        password,
                     });
-                }).connect({
-                    host: panel.replace('panel', 'ssh'),
-                    port: 22,
-                    username: username,
-                    password: password,
-                    tryKeyboard: true, // 使用键盘交互认证
-                });
+                    console.log(result);
+                    allLoginMessages.push(loginMessage + ' 保活成功');
+                } catch (error) {
+                    console.error(`SSH 登录或命令执行失败: ${error}`);
+                    allLoginMessages.push(loginMessage + ' 保活失败');
+                }
 
             } else {
                 zhanghao++;
