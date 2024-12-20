@@ -67,55 +67,54 @@ async function connectSSH({ host, username, password }) {
                     reject(`SSH 执行命令失败: ${err.message}`);
                     return;
                 }
-
-                let startTime = Date.now(); // 启动时间
-
+        
+                let retryCount = 0; // 记录重试次数
+                const maxRetries = 3; // 最大重试次数
+                const retryDelay = 5000; // 重试延时（5秒）
+                let latestData = ''; // 存储最新的输出数据
+        
+                // 定义一个定时器，每5秒执行一次
+                const interval = setInterval(() => {
+                    if (retryCount < maxRetries) {
+                        console.log('输出: ' + latestData);
+                        stream.write('\r'); // 模拟按下回车键
+                        retryCount++; // 增加重试计数
+                    }
+        
+                    // 如果已重试三次，停止定时器
+                    if (retryCount >= maxRetries) {
+                        clearInterval(interval); // 停止定时器
+                        client.end();
+                        resolve('保活失败');
+                    }
+        
+                    // 检查是否出现了启动成功的提示
+                    if (latestData.includes('已启动')) {
+                        console.log('保活成功！');
+                        client.end();
+                        clearInterval(interval); // 停止定时器
+                        resolve('保活成功');
+                    }
+        
+                }, retryDelay);
+        
                 stream
                     .on('close', (code, signal) => {
                         console.log('命令执行完成');
+                        clearInterval(interval); // 停止定时器
                         client.end();
                         resolve('命令执行成功！');
                     })
                     .on('data', (data) => {
-                        console.log('输出: ' + data.toString());
-
-                        let retryCount = 0; // 记录重试次数
-                        const maxRetries = 3; // 最大重试次数
-                        const retryDelay = 3000; // 重试延时（5秒）
-                        
-                        // 定义一个定时器，每5秒执行一次
-                        const interval = setInterval(() => {
-                            
-                            console.log('输出: ' + data.toString());
-                            if (retryCount < maxRetries) {
-                                stream.write('\r'); // 模拟按下回车键
-                                retryCount++; // 增加重试计数
-                            }
-                        
-                            // 如果已重试三次，停止定时器
-                            if (retryCount >= maxRetries) {
-                                clearInterval(interval); // 停止定时器
-                                client.end();
-                                resolve('保活失败');
-                            }
-
-                            // 检查是否出现了启动成功的提示
-                            if (data.includes('已启动')) {
-                                console.log('保活成功！');
-                                client.end();
-                                clearInterval(interval); // 停止定时器
-                                resolve('保活成功');
-                            }
-                            
-                        }, retryDelay);
-
-
+                        latestData = data.toString(); // 更新最新的输出数据
+                        console.log('输出: ' + latestData);
                     })
                     .stderr.on('data', (data) => {
                         console.error('错误输出: ' + data.toString());
                     });
             });
         });
+
 
         client.on('error', (err) => {
             reject(`SSH 连接出错: ${err.message}`);
