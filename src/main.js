@@ -85,6 +85,8 @@ async function connectSSH({ host, username, password }) {
                         
                         // 定义一个定时器，每5秒执行一次
                         const interval = setInterval(() => {
+                            
+                            console.log('输出: ' + data.toString());
                             if (retryCount < maxRetries) {
                                 stream.write('\r'); // 模拟按下回车键
                                 retryCount++; // 增加重试计数
