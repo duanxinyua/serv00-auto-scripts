@@ -60,7 +60,7 @@ async function connectSSH({ host, username, password }) {
             finish([password]); // 使用密码作为响应
         });
 
-client.on('ready', () => {
+        client.on('ready', () => {
             console.log(成功登录到 ${host});
             client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
                 if (err) {
