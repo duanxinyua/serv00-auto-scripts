@@ -77,45 +77,23 @@ async function connectSSH({ host, username, password }) {
                         resolve('命令执行成功！');
                     })
                     .on('data', (data) => {
-
-                        let retryCount = 0; // 记录重试次数
-                        const maxRetries = 3; // 最大重试次数
-                        const retryDelay = 3000; // 重试延时（5秒）
-                        
-                        // 定义一个定时器，每3秒执行一次
-                        const interval = setInterval(() => {
-                            
-                            const dataStr = data.toString();
-                            console.log('87输出: ' + dataStr);
-        
-                            // 去除换行符
-                            const dataWithoutNewlines = dataStr.replace(/\n/g, ''); // 或者使用 \r\n 来替换
-                            console.log('去除换行符后的数据: ' + dataWithoutNewlines);
-
-                            
-                            if (retryCount < maxRetries) {
-                                stream.write('\r'); // 模拟按下回车键
-                                retryCount++; // 增加重试计数
-                            }
-                        
-                            // 如果已重试三次，停止定时器
-                            if (retryCount >= maxRetries) {
-                                clearInterval(interval); // 停止定时器
-                                client.end();
-                                resolve('保活失败');
-                            }
-
-                            // 检查是否出现了启动成功的提示
-                            if (dataWithoutNewlines.includes('已启动')) {
-                                console.log('保活成功！');
-                                client.end();
-                                clearInterval(interval); // 停止定时器
-                                resolve('保活成功');
-                            }
-                            
-                        }, retryDelay);
-
-
+                        // 输出每次收到的数据
+                        const output = data.toString();
+                        console.log('87输出: ' + output);
+                
+                        // 检查是否包含“请按下回车键启动”
+                        if (output.includes('请按下回车键启动')) {
+                            console.log('检测到启动提示，准备继续...');
+                            // 你可以在这里模拟按下回车键
+                            stream.write('\r'); // 模拟按下回车键
+                        }
+                
+                        // 检查是否包含“已启动”
+                        if (output.includes('已启动')) {
+                            console.log('nezha-agent 已启动！');
+                            client.end();
+                            resolve('保活成功');
+                        }
                     })
                     .stderr.on('data', (data) => {
                         console.error('错误输出: ' + data.toString());
