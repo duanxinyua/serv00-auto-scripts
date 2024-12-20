@@ -3,7 +3,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 import { fileURLToPath } from 'url';
-
+import { Client } from 'ssh2'; // 需要安装 ssh2 模块
 
 function formatToISO(date) {
     return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}Z/, '');
@@ -51,15 +51,57 @@ async function sendTelegramMessage(token, chatId, message) {
     }
 }
 
+async function executeSSHCommand(host, username, password, command) {
+    return new Promise((resolve, reject) => {
+        const conn = new Client();
+        let output = ''; // 用于收集命令输出
+
+        conn
+            .on('ready', () => {
+                console.log(`SSH 已连接到 ${host}`);
+                conn.exec(command, (err, stream) => {
+                    if (err) {
+                        conn.end();
+                        return reject(`执行命令时出错: ${err.message}`);
+                    }
+
+                    stream
+                        .on('close', (code, signal) => {
+                            console.log(`命令执行完成，退出码: ${code}, 信号: ${signal}`);
+                            conn.end();
+                            resolve(output); // 返回完整的命令输出
+                        })
+                        .on('data', (data) => {
+                            output += data.toString(); // 收集标准输出
+                            console.log(`STDOUT: ${data}`);
+                        })
+                        .stderr.on('data', (data) => {
+                            console.error(`STDERR: ${data}`);
+                        });
+
+                    // 模拟发送回车
+                    setTimeout(() => stream.write('\n'), 1000);
+                });
+            })
+            .on('error', (err) => {
+                reject(`SSH 连接出错: ${err.message}`);
+            })
+            .connect({
+                host,
+                port: 22,
+                username,
+                password,
+            });
+    });
+}
 
 (async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
-    
-    let zhanghao = 0;
 
+    let zhanghao = 0;
     let allLoginMessages = []; // 用来收集所有登录成功的信息
 
     // 获取当前时间
@@ -99,7 +141,6 @@ async function sendTelegramMessage(token, chatId, message) {
                 return logoutButton !== null;
             });
 
-            // 判断 addr 是否存在，存在就加到消息内容前面
             let messagePrefix = '';
             if (addr) {
                 messagePrefix = `${addr}-`;
@@ -108,24 +149,39 @@ async function sendTelegramMessage(token, chatId, message) {
             if (isLoggedIn) {
                 zhanghao++;
                 console.log(`${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`);
-                const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
-                allLoginMessages.push(loginMessage); // 收集所有登录成功的信息
+                let loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
+
+                // SSH 登录逻辑
+                const sshHost = panel.replace('panel', 's');
+                const command = 'bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)';
+                console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
+
+                try {
+                    const sshOutput = await executeSSHCommand(sshHost, username, password, command);
+                    if (sshOutput.includes('nezha-agent 已启动！')) {
+                        loginMessage += ' 保活成功';
+                    }
+                    console.log(`命令已成功在 ${sshHost} 上执行。`);
+                } catch (error) {
+                    console.error(`SSH 登录或命令执行失败: ${error}`);
+                }
+
+                allLoginMessages.push(loginMessage); // 收集登录信息
             } else {
                 zhanghao++;
                 console.error(`${zhanghao} 账号 ${username} 登录失败，请检查账号和密码是否正确。`);
                 const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录失败，请检查账号和密码是否正确。`;
-                allLoginMessages.push(loginMessage); // 收集失败信息
+                allLoginMessages.push(loginMessage);
             }
         } catch (error) {
             console.error(`账号 ${username} 登录时出现错误: ${error}`);
             const errorMessage = `账号 ${username} 登录时出现错误: ${error.message}`;
-            allLoginMessages.push(errorMessage); // 收集错误信息
+            allLoginMessages.push(errorMessage);
         } finally {
             await page.close();
             await browser.close();
 
-            // 模拟延时
-            const delay = Math.floor(Math.random() * 5000) + 1000; // 随机延时1秒到5秒之间
+            const delay = Math.floor(Math.random() * 5000) + 1000;
             await delayTime(delay);
         }
     }
