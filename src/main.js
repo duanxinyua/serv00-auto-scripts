@@ -64,7 +64,7 @@ async function connectSSH({ host, username, password }) {
             console.log(`成功登录到 ${host}`);
             client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
                 if (err) {
-                    reject(SSH 执行命令失败: ${err.message});
+                    reject(`SSH 执行命令失败: ${err.message}`);
                     return;
                 }
 
