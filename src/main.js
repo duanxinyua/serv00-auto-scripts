@@ -75,22 +75,22 @@ async function connectSSH({ host, username, password }) {
         
                 // 定义一个定时器，每5秒执行一次
                 const interval = setInterval(() => {
-                    // 检查是否出现了需要按回车的提示
-                    if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动')) {
-                        console.log('检测到需要按下回车键，模拟按下回车键');
-                        stream.write('\r'); // 模拟按下回车键
-                        retryCount++; // 增加重试计数
-                    }
-        
                     // 如果已重试三次，停止定时器
                     if (retryCount >= maxRetries) {
                         clearInterval(interval); // 停止定时器
                         client.end();
                         resolve('保活失败');
                     }
-        
+                    
+                    // 检查是否出现了需要按回车的提示
+                    if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动' && !latestData.includes('已启动'))) {
+                        console.log('检测到需要按下回车键，模拟按下回车键');
+                        stream.write('\r'); // 模拟按下回车键
+                        retryCount++; // 增加重试计数
+                    }
+                    
                     // 检查是否出现了启动成功的提示
-                    if (latestData.includes('已启动')) {
+                    if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动' && latestData.includes('已启动'))) {
                         console.log('保活成功！');
                         client.end();
                         clearInterval(interval); // 停止定时器
