@@ -67,7 +67,11 @@ async function connectSSH({ host, username, password }) {
                     reject(`SSH 执行命令失败: ${err.message}`);
                     return;
                 }
-                let enterPressed = false; // 用来标记是否已经按下回车
+                
+                let enterPressed = false; // 标记是否已经按下回车
+                let retryCount = 0; // 记录重试次数
+                const maxRetries = 3; // 最大重试次数
+        
                 stream
                     .on('close', (code, signal) => {
                         console.log('命令执行完成');
@@ -84,6 +88,16 @@ async function connectSSH({ host, username, password }) {
                             console.log('检测到需要按下回车键，模拟按下回车键');
                             stream.write('\r'); // 模拟按下回车键
                             enterPressed = true; // 标记回车键已按下
+                        } else if (enterPressed && retryCount < maxRetries) {
+                            // 如果已经按下回车键且仍未启动 agent，则再次重试
+                            console.log(`等待启动失败，重试第 ${retryCount + 1} 次...`);
+                            stream.write('\r'); // 再次模拟按下回车键
+                            retryCount++; // 增加重试计数
+                        } else if (retryCount >= maxRetries) {
+                            // 如果已经重试了三次，输出失败信息
+                            console.log('三次重试后仍未成功启动nezha-agent，保活失败！');
+                            client.end();
+                            reject('保活失败');
                         }
                     })
                     .stderr.on('data', (data) => {
@@ -91,6 +105,7 @@ async function connectSSH({ host, username, password }) {
                     });
             });
         });
+
 
 
         client.on('error', (err) => {
