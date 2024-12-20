@@ -75,12 +75,6 @@ async function connectSSH({ host, username, password }) {
         
                 // 定义一个定时器，每5秒执行一次
                 const interval = setInterval(() => {
-                    // 如果已重试三次，停止定时器
-                    if (retryCount >= maxRetries) {
-                        clearInterval(interval); // 停止定时器
-                        client.end();
-                        resolve('保活失败');
-                    }
                     
                     // 检查是否出现了需要按回车的提示
                     if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动' && !latestData.includes('已启动'))) {
@@ -95,6 +89,13 @@ async function connectSSH({ host, username, password }) {
                         client.end();
                         clearInterval(interval); // 停止定时器
                         resolve('保活成功');
+                    }
+                    
+                    // 如果已重试三次，停止定时器
+                    if (retryCount >= maxRetries) {
+                        clearInterval(interval); // 停止定时器
+                        client.end();
+                        resolve('保活失败');
                     }
                 }, retryDelay);
         
