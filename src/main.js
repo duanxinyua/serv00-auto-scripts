@@ -93,6 +93,8 @@ async function connectSSH({ host, username, password }) {
                             // 如果已重试三次，停止定时器
                             if (retryCount >= maxRetries) {
                                 clearInterval(interval); // 停止定时器
+                                client.end();
+                                resolve('保活失败');
                             }
 
                             // 检查是否出现了启动成功的提示
