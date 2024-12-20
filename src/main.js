@@ -150,6 +150,7 @@ async function sendTelegramMessage(token, chatId, message) {
                     port: 22,
                     username: username,
                     password: password,
+                    tryKeyboard: true, // 使用键盘交互认证
                 });
 
             } else {
