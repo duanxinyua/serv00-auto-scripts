@@ -59,7 +59,7 @@ async function connectSSH({ host, username, password }) {
             console.log('Keyboard Interactive 身份验证触发');
             finish([password]); // 使用密码作为响应
         });
-        
+
         client.on('ready', () => {
             console.log(`成功登录到 ${host}`);
             client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
@@ -67,11 +67,13 @@ async function connectSSH({ host, username, password }) {
                     reject(`SSH 执行命令失败: ${err.message}`);
                     return;
                 }
-        
+
                 let enterPressed = false; // 标记是否已经按下回车
                 let retryCount = 0; // 记录重试次数
                 const maxRetries = 3; // 最大重试次数
-        
+                const maxTimeout = 30000; // 最大等待时间（30秒）
+                let startTime = Date.now(); // 启动时间
+
                 stream
                     .on('close', (code, signal) => {
                         console.log('命令执行完成');
@@ -80,14 +82,14 @@ async function connectSSH({ host, username, password }) {
                     })
                     .on('data', (data) => {
                         console.log('输出: ' + data.toString());
-        
+
                         // 检查是否出现了启动成功的提示
                         if (data.includes('nezha-agent 已启动！')) {
                             console.log('保活成功！');
                             client.end();
                             resolve('保活成功');
                         }
-        
+
                         // 检查是否需要按下回车键
                         if (!enterPressed && data.includes('nezha-agent已经准备就绪，请按下回车键启动')) {
                             console.log('检测到需要按下回车键，模拟按下回车键');
@@ -95,17 +97,17 @@ async function connectSSH({ host, username, password }) {
                             enterPressed = true; // 标记回车键已按下
                             return; // 按下回车键后，退出当前回调，等待新的输出
                         }
-        
+
                         // 如果已经按下回车键且启动仍未成功，则重试
-                        if (enterPressed && retryCount < maxRetries) {
+                        if (enterPressed && retryCount < maxRetries && Date.now() - startTime < maxTimeout) {
                             console.log(`等待启动失败，重试第 ${retryCount + 1} 次...`);
                             stream.write('\r'); // 再次模拟按下回车键
                             retryCount++; // 增加重试计数
                         }
-        
-                        // 如果已重试三次，输出失败信息
-                        if (retryCount >= maxRetries) {
-                            console.log('三次重试后仍未成功启动nezha-agent，保活失败！');
+
+                        // 如果已重试三次或超时，输出失败信息
+                        if (retryCount >= maxRetries || Date.now() - startTime >= maxTimeout) {
+                            console.log('重试次数已满或超时，保活失败！');
                             client.end();
                             reject('保活失败');
                         }
@@ -115,10 +117,6 @@ async function connectSSH({ host, username, password }) {
                     });
             });
         });
-
-
-
-
 
         client.on('error', (err) => {
             reject(`SSH 连接出错: ${err.message}`);
@@ -137,6 +135,7 @@ async function connectSSH({ host, username, password }) {
         });
     });
 }
+
 
 (async () => {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
