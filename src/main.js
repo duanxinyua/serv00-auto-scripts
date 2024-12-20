@@ -81,7 +81,7 @@ async function connectSSH({ host, username, password }) {
 
                         let retryCount = 0; // 记录重试次数
                         const maxRetries = 3; // 最大重试次数
-                        const retryDelay = 5000; // 重试延时（5秒）
+                        const retryDelay = 3000; // 重试延时（5秒）
                         
                         // 定义一个定时器，每5秒执行一次
                         const interval = setInterval(() => {
@@ -98,7 +98,7 @@ async function connectSSH({ host, username, password }) {
                             }
 
                             // 检查是否出现了启动成功的提示
-                            if (data.includes('nezha-agent已启动')) {
+                            if (data.includes('已启动')) {
                                 console.log('保活成功！');
                                 client.end();
                                 clearInterval(interval); // 停止定时器
