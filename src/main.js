@@ -60,55 +60,55 @@ async function connectSSH({ host, username, password }) {
             finish([password]); // 使用密码作为响应
         });
 
-        client.on('ready', () => {
-            console.log(`成功登录到 ${host}`);
+client.on('ready', () => {
+            console.log(成功登录到 ${host});
             client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
                 if (err) {
-                    reject(`SSH 执行命令失败: ${err.message}`);
+                    reject(SSH 执行命令失败: ${err.message});
                     return;
                 }
-        
-                let retryCount = 0; // 记录重试次数
-                const maxRetries = 3; // 最大重试次数
-                const retryDelay = 5000; // 重试延时（5秒）
-                let latestData = ''; // 存储最新的输出数据
-        
-                // 定义一个定时器，每5秒执行一次
-                const interval = setInterval(() => {
-                    
-                    // 检查是否出现了需要按回车的提示
-                    if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动' && !latestData.includes('已启动'))) {
-                        console.log('检测到需要按下回车键，模拟按下回车键');
-                        stream.write('\r'); // 模拟按下回车键
-                        retryCount++; // 增加重试计数
-                    }
-                    
-                    // 检查是否出现了启动成功的提示
-                    if (latestData.includes('nezha-agent已经准备就绪，请按下回车键启动' && latestData.includes('已启动'))) {
-                        console.log('保活成功！');
-                        client.end();
-                        clearInterval(interval); // 停止定时器
-                        resolve('保活成功');
-                    }
-                    
-                    // 如果已重试三次，停止定时器
-                    if (retryCount >= maxRetries) {
-                        clearInterval(interval); // 停止定时器
-                        client.end();
-                        resolve('保活失败');
-                    }
-                }, retryDelay);
-        
+
+                let startTime = Date.now(); // 启动时间
+
                 stream
                     .on('close', (code, signal) => {
                         console.log('命令执行完成');
-                        clearInterval(interval); // 停止定时器
                         client.end();
                         resolve('命令执行成功！');
                     })
                     .on('data', (data) => {
-                        latestData = data.toString(); // 更新最新的输出数据
-                        console.log('输出: ' + latestData);
+
+                        let retryCount = 0; // 记录重试次数
+                        const maxRetries = 3; // 最大重试次数
+                        const retryDelay = 3000; // 重试延时（5秒）
+                        
+                        // 定义一个定时器，每3秒执行一次
+                        const interval = setInterval(() => {
+                            console.log('87输出: ' + data.toString());
+                            
+                            if (retryCount < maxRetries) {
+                                stream.write('\r'); // 模拟按下回车键
+                                retryCount++; // 增加重试计数
+                            }
+                        
+                            // 如果已重试三次，停止定时器
+                            if (retryCount >= maxRetries) {
+                                clearInterval(interval); // 停止定时器
+                                client.end();
+                                resolve('保活失败');
+                            }
+
+                            // 检查是否出现了启动成功的提示
+                            if (data.includes('已启动')) {
+                                console.log('保活成功！');
+                                client.end();
+                                clearInterval(interval); // 停止定时器
+                                resolve('保活成功');
+                            }
+                            
+                        }, retryDelay);
+
+
                     })
                     .stderr.on('data', (data) => {
                         console.error('错误输出: ' + data.toString());
