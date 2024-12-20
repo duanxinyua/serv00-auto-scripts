@@ -80,7 +80,7 @@ async function connectSSH({ host, username, password }) {
                         // 检查是否出现了需要启动的提示
                         if (data.includes('nezha-agent 已启动！')) {
                             console.log('保活成功！');
-                        } else if (!enterPressed && data.includes('nezha-agent 已经准备就绪，请按下回车键启动')) {
+                        } else if (!enterPressed && data.includes('nezha-agent已经准备就绪，请按下回车键启动')) {
                             console.log('检测到需要按下回车键，模拟按下回车键');
                             stream.write('\r'); // 模拟按下回车键
                             enterPressed = true; // 标记回车键已按下
