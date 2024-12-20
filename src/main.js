@@ -84,7 +84,14 @@ async function connectSSH({ host, username, password }) {
                         
                         // 定义一个定时器，每3秒执行一次
                         const interval = setInterval(() => {
-                            console.log('87输出: ' + data.toString());
+                            
+                            const dataStr = data.toString();
+                            console.log('87输出: ' + dataStr);
+        
+                            // 去除换行符
+                            const dataWithoutNewlines = dataStr.replace(/\n/g, ''); // 或者使用 \r\n 来替换
+                            console.log('去除换行符后的数据: ' + dataWithoutNewlines);
+
                             
                             if (retryCount < maxRetries) {
                                 stream.write('\r'); // 模拟按下回车键
@@ -99,7 +106,7 @@ async function connectSSH({ host, username, password }) {
                             }
 
                             // 检查是否出现了启动成功的提示
-                            if (data.includes('已启动')) {
+                            if (dataWithoutNewlines.includes('已启动')) {
                                 console.log('保活成功！');
                                 client.end();
                                 clearInterval(interval); // 停止定时器
