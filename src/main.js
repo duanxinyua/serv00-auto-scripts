@@ -190,8 +190,9 @@ async function connectSSH({ host, username, password }) {
                 zhanghao++;
                 console.log(`${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`);
                 const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
+                allLoginMessages.push(loginMessage);
 
-                const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
+                // const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
                 // console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
 
                 // try {
