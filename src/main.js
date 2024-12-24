@@ -62,57 +62,17 @@ async function connectSSH({ host, username, password }) {
 
         client.on('ready', () => {
             console.log(`成功登录到 ${host}`);
-            client.exec('bash <(curl -s https://raw.githubusercontent.com/kakluo/nezha-serv00/main/install-agent.sh)', (err, stream) => {
+            client.exec('bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)', (err, stream) => {
                 if (err) {
                     reject(`SSH 执行命令失败: ${err.message}`);
                     return;
+                }else{
+                    console.log('命令执行完成');
+                    client.end();
+                    resolve('保活成功！');
                 }
-
-                let startTime = Date.now(); // 启动时间
-
-
-                stream
-                    .on('close', (code, signal) => {
-                        console.log('命令执行完成');
-                        client.end();
-                        resolve('命令执行成功！');
-                    })
-                    .on('data', (data) => {
-                        const output = data.toString();
-                        console.log('87输出: ' + output);
-                
-                        // 定义一个定时器，每隔3秒检查一次输出
-                        let retryCount = 0;
-                        const maxRetries = 3; // 最大重试次数
-                        const retryDelay = 3000; // 3秒的重试间隔
-                
-                        const interval = setInterval(() => {
-                            console.log('检测输出: ' + output);
-                
-                            if (output.includes('请按下回车键启动')) {
-                                console.log('检测到启动提示，准备继续...');
-                                stream.write('\r'); // 模拟按下回车键
-                            }
-                            // 如果重试次数超过了最大值，停止定时器并返回失败
-                            if (retryCount > maxRetries) {
-                                clearInterval(interval); // 停止定时器
-                                client.end();
-                                resolve('保活成功');
-                            }
-                            retryCount++;
-                        }, retryDelay);
-                    })
-                    .stderr.on('data', (data) => {
-                        console.error('错误输出: ' + data.toString());
-                    });
-
-
-
-
-                
             });
         });
-
 
         client.on('error', (err) => {
             reject(`SSH 连接出错: ${err.message}`);
@@ -192,21 +152,21 @@ async function connectSSH({ host, username, password }) {
                 const loginMessage = `${zhanghao} 账号 ${messagePrefix}${username} 登录成功！`;
                 allLoginMessages.push(loginMessage);
 
-                // const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
-                // console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
+                const sshHost = panel.replace('panel', 's'); // 替换 panel 为 s
+                console.log(`尝试通过 SSH 登录 ${sshHost} 并执行命令。`);
 
-                // try {
-                //     const result = await connectSSH({
-                //         host: sshHost,
-                //         username,
-                //         password,
-                //     });
-                //     console.log(result);
-                //     allLoginMessages.push(loginMessage + ' 保活成功');
-                // } catch (error) {
-                //     console.error(`SSH 登录或命令执行失败: ${error}`);
-                //     allLoginMessages.push(loginMessage + ' 保活失败');
-                // }
+                try {
+                    const result = await connectSSH({
+                        host: sshHost,
+                        username,
+                        password,
+                    });
+                    console.log(result);
+                    allLoginMessages.push(loginMessage + ' 保活成功。');
+                } catch (error) {
+                    console.error(`SSH 登录或命令执行失败: ${error}`);
+                    allLoginMessages.push(loginMessage + ' 保活失败。');
+                }
 
             } else {
                 zhanghao++;
@@ -223,7 +183,7 @@ async function connectSSH({ host, username, password }) {
             await browser.close();
 
             // 模拟延时
-            const delay = Math.floor(Math.random() * 5000) + 1000; // 随机延时1秒到5秒之间
+            const delay = Math.floor(Math.random() * 3000) + 1000; // 随机延时1秒到3秒之间
             await delayTime(delay);
         }
     }
