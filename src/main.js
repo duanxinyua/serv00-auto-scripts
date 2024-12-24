@@ -62,17 +62,39 @@ async function connectSSH({ host, username, password }) {
 
         client.on('ready', () => {
             console.log(`成功登录到 ${host}`);
-            client.exec('bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)', (err, stream) => {
+            
+            const command = 'bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)';
+            console.log(`正在执行命令: ${command}`);
+            
+            client.exec(command, (err, stream) => {
                 if (err) {
                     reject(`SSH 执行命令失败: ${err.message}`);
+                    client.end(); // 确保在错误情况下关闭连接
                     return;
-                }else{
-                    console.log('命令执行完成');
-                    client.end();
-                    resolve('保活成功！');
                 }
+        
+                let output = '';
+                stream.on('data', (data) => {
+                    output += data.toString();
+                });
+        
+                stream.on('close', (code, signal) => {
+                    console.log(`命令执行完成，退出代码: ${code}, 信号: ${signal}`);
+                    console.log(`命令输出: ${output}`);
+                    client.end();
+                    if (code === 0) {
+                        resolve('保活成功！');
+                    } else {
+                        reject(`命令执行失败，退出代码: ${code}`);
+                    }
+                });
+        
+                stream.stderr.on('data', (data) => {
+                    console.error(`命令错误输出: ${data}`);
+                });
             });
         });
+
 
         client.on('error', (err) => {
             reject(`SSH 连接出错: ${err.message}`);
