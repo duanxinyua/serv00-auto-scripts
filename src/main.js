@@ -135,13 +135,13 @@ async function processAccount(account) {
         process.exit(1);
     }
 
-    const limit = pLimit(1); // 最大并发数为 5
+    const limit = pLimit(5); // 最大并发数为 5
     const tasks = accounts.map(account => limit(() => processAccount(account)));
     const results = await Promise.all(tasks);
 
     // 获取当前时间
-    const nowUtc = formatToISO(new Date());
-    const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
+    const nowUtc = new Date().toISOString();  // 使用 toISOString() 获取 UTC 时间的 ISO 格式
+    const nowBeijing = new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString();  // 北京时间，UTC+8
 
     // 发送结果到 Telegram
     const finalMessage = `北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）账号登录结果：\n` + results.join('\n');
@@ -149,3 +149,4 @@ async function processAccount(account) {
 
     console.log('所有账号登录完成！');
 })();
+
