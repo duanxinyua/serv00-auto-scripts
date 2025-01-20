@@ -42,32 +42,59 @@ async function sendTelegramMessage(token, chatId, message) {
     }
 }
 
-// 通过 SSH 连接执行命令
 async function connectSSH({ host, username, password }) {
     return new Promise((resolve, reject) => {
         const client = new Client();
         client.on('ready', () => {
             console.log(`成功登录到 ${host}`);
+            
+            // 你的脚本命令
             const command = 'bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)';
+            console.log(`正在执行命令: ${command}`);
+            
+            // 执行命令
             client.exec(command, (err, stream) => {
                 if (err) {
-                    reject(`SSH 执行命令失败: ${err.message}`);
+                    console.error(`命令执行失败: ${err.message}`);
+                    reject(err);
                     client.end();
                     return;
                 }
-                let output = '';
-                stream.on('data', data => output += data.toString());
-                stream.on('close', code => {
+
+                let stdout = '';
+                let stderr = '';
+
+                // 捕获命令的标准输出
+                stream.on('data', (data) => {
+                    stdout += data.toString();
+                    console.log(`命令输出: ${data.toString()}`);
+                });
+
+                // 捕获命令的错误输出
+                stream.stderr.on('data', (data) => {
+                    stderr += data.toString();
+                    console.error(`命令错误输出: ${data.toString()}`);
+                });
+
+                // 命令执行完成
+                stream.on('close', (code, signal) => {
+                    console.log(`命令执行完成，退出代码: ${code}, 信号: ${signal}`);
                     client.end();
-                    if (code === 0) resolve('保活成功！');
-                    else reject(`命令执行失败，退出代码: ${code}`);
+
+                    if (code === 0) {
+                        resolve(`保活成功！输出: ${stdout}`);
+                    } else {
+                        reject(`命令执行失败，退出代码: ${code}, 错误输出: ${stderr}`);
+                    }
                 });
             });
-        });
-        client.on('error', err => reject(`SSH 连接出错: ${err.message}`));
-        client.connect({ host, port: 22, username, password });
+        }).on('error', (err) => {
+            console.error(`SSH 连接失败: ${err.message}`);
+            reject(err);
+        }).connect({ host, username, password });
     });
 }
+
 
 // 处理单个账号
 async function processAccount(account) {
@@ -124,7 +151,7 @@ async function processAccount(account) {
         process.exit(1);
     }
 
-    const limit = pLimit(5); // 最大并发数为 5
+    const limit = pLimit(50); // 最大并发数为 5
     const tasks = accounts.map(account => limit(() => processAccount(account)));
     const results = await Promise.all(tasks);
 
