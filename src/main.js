@@ -1,51 +1,16 @@
+import { Client } from 'ssh2';
+import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
-import puppeteer from 'puppeteer';
-import axios from 'axios';
 import { fileURLToPath } from 'url';
-import { Client } from 'ssh2';
-import pLimit from 'p-limit'; // 用于并发控制
+import pLimit from 'p-limit';
+import { sendTelegramMessage, formatToISO } from './utils'; // 假设你有这个工具函数
 
-// 格式化日期为 ISO 标准
-function formatToISO(date) {
-    return date.toISOString().replace('T', ' ').replace('Z', '').replace(/\.\d{3}Z/, '');
-}
-
-// 延时函数
-async function delayTime(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// 发送 Telegram 消息
-async function sendTelegramMessage(token, chatId, message) {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const data = { chat_id: chatId, text: message };
-
-    let retryCount = 0;
-    const maxRetries = 5;
-    const retryDelay = 10000;
-
-    while (retryCount <= maxRetries) {
-        try {
-            await axios.post(url, data);
-            console.log('消息已发送到 Telegram');
-            return;
-        } catch (error) {
-            retryCount++;
-            if (retryCount > maxRetries) {
-                console.error('已达到最大重试次数，消息发送失败。');
-                return;
-            }
-            console.error(`消息发送失败，${retryDelay / 1000}秒后重试... (${retryCount}/${maxRetries})`);
-            await delayTime(retryDelay);
-        }
-    }
-}
-
-
-async function connectSSH({ssh, username, password }) {
+// 连接 SSH 并执行命令
+async function connectSSH({ ssh, username, password }) {
     return new Promise((resolve, reject) => {
         const client = new Client();
+
         client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
             console.log('Keyboard Interactive 身份验证触发');
             finish([password]); // 使用密码作为响应
@@ -95,7 +60,7 @@ async function connectSSH({ssh, username, password }) {
         });
 
         client.connect({
-            host：ssh,
+            host: ssh,
             port: 22, // 默认端口，可以根据需要调整
             username,
             password,
@@ -104,18 +69,23 @@ async function connectSSH({ssh, username, password }) {
     });
 }
 
-
-
-
-
 // 处理单个账号
 async function processAccount(account) {
     const { username, password, panel, ssh, addr } = account;
+
+    // 参数验证
+    if (!username || !password || !ssh) {
+        console.error(`账号信息不完整，缺少必需的字段: ${JSON.stringify(account)}`);
+        return `账号信息不完整，无法处理账号: ${username}`;
+    }
+
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const url = `https://${panel}/login/?next=/`;
     let messagePrefix = addr ? `${addr}-` : '';
+
     try {
+        // 打开登录页面并进行登录
         await page.goto(url);
         await page.type('#id_username', username);
         await page.type('#id_password', password);
@@ -131,8 +101,10 @@ async function processAccount(account) {
 
         if (isLoggedIn) {
             console.log(`账号 ${messagePrefix}${username} 登录成功！`);
+
+            // 尝试连接 SSH 保活
             try {
-                const result = await connectSSH({ ssh , username, password });
+                const result = await connectSSH({ ssh, username, password });
                 console.log(result);
                 return `账号 ${messagePrefix}${username} 登录成功并保活成功。`;
             } catch (error) {
@@ -158,6 +130,7 @@ async function processAccount(account) {
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
+    // 确保必要的环境变量存在
     if (!telegramToken || !telegramChatId) {
         console.error('缺少必要的环境变量 TELEGRAM_BOT_TOKEN 或 TELEGRAM_CHAT_ID');
         process.exit(1);
