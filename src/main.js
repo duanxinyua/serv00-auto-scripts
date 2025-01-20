@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pLimit from 'p-limit';
-import { sendTelegramMessage, formatToISO } from './utils'; // 假设你有这个工具函数
 
 // 连接 SSH 并执行命令
 async function connectSSH({ ssh, username, password }) {
