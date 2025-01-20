@@ -135,7 +135,7 @@ async function processAccount(account) {
         process.exit(1);
     }
 
-    const limit = pLimit(5); // 最大并发数为 5
+    const limit = pLimit(1); // 最大并发数为 5
     const tasks = accounts.map(account => limit(() => processAccount(account)));
     const results = await Promise.all(tasks);
 
