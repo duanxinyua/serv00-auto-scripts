@@ -43,7 +43,7 @@ async function sendTelegramMessage(token, chatId, message) {
 }
 
 
-async function connectSSH({ ssh , username, password }) {
+async function connectSSH({ssh, username, password }) {
     return new Promise((resolve, reject) => {
         const client = new Client();
         client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
@@ -95,7 +95,7 @@ async function connectSSH({ ssh , username, password }) {
         });
 
         client.connect({
-            ssh,
+            host：ssh,
             port: 22, // 默认端口，可以根据需要调整
             username,
             password,
