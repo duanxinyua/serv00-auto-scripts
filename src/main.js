@@ -110,7 +110,7 @@ async function connectSSH({ host, username, password }) {
 
 // 处理单个账号
 async function processAccount(account) {
-    const { username, password, panel, addr, sshHost } = account;
+    const { username, password, panel, addr, ssh } = account;
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const url = `https://${panel}/login/?next=/`;
@@ -119,7 +119,6 @@ async function processAccount(account) {
         await page.goto(url);
         await page.type('#id_username', username);
         await page.type('#id_password', password);
-        await page.type('#id_ssh', ssh);
         await Promise.all([
             page.click('#submit'),
             page.waitForNavigation()
@@ -133,7 +132,7 @@ async function processAccount(account) {
         if (isLoggedIn) {
             console.log(`账号 ${messagePrefix}${username} 登录成功！`);
             try {
-                const result = await connectSSH({ sshHost, username, password });
+                const result = await connectSSH({ ssh, username, password });
                 console.log(result);
                 return `账号 ${messagePrefix}${username} 登录成功并保活成功。`;
             } catch (error) {
