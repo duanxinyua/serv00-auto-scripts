@@ -44,10 +44,6 @@ async function sendTelegramMessage(token, chatId, message) {
 
 
 async function connectSSH({ ssh , username, password }) {
-    
-    console.log(host);
-    console.log(username);
-    console.log(password);
     return new Promise((resolve, reject) => {
         const client = new Client();
         client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
@@ -56,7 +52,7 @@ async function connectSSH({ ssh , username, password }) {
         });
 
         client.on('ready', () => {
-            console.log(`成功登录到 ${host}`);
+            console.log(`成功登录到 ${ssh}`);
             
             const command = 'bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)';
             console.log(`正在执行命令: ${command}`);
@@ -95,11 +91,11 @@ async function connectSSH({ ssh , username, password }) {
         });
 
         client.on('end', () => {
-            console.log(`SSH 连接关闭: ${host}`);
+            console.log(`SSH 连接关闭: ${ssh}`);
         });
 
         client.connect({
-            host,
+            ssh,
             port: 22, // 默认端口，可以根据需要调整
             username,
             password,
