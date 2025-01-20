@@ -53,14 +53,14 @@ async function connectSSH({ host, username, password }) {
         });
 
         client.on('ready', () => {
-            console.log(成功登录到 ${host});
+            console.log(`成功登录到 ${host}`);
             
             const command = 'bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)';
-            console.log(正在执行命令: ${command});
+            console.log(`正在执行命令: ${command}`);
             
             client.exec(command, (err, stream) => {
                 if (err) {
-                    reject(SSH 执行命令失败: ${err.message});
+                    reject(`SSH 执行命令失败: ${err.message}`);
                     client.end(); // 确保在错误情况下关闭连接
                     return;
                 }
@@ -71,29 +71,28 @@ async function connectSSH({ host, username, password }) {
                 });
         
                 stream.on('close', (code, signal) => {
-                    console.log(命令执行完成，退出代码: ${code}, 信号: ${signal});
-                    console.log(命令输出: ${output});
+                    console.log(`命令执行完成，退出代码: ${code}, 信号: ${signal}`);
+                    console.log(`命令输出: ${output}`);
                     client.end();
                     if (code === 0) {
                         resolve('保活成功！');
                     } else {
-                        reject(命令执行失败，退出代码: ${code});
+                        reject(`命令执行失败，退出代码: ${code}`);
                     }
                 });
         
                 stream.stderr.on('data', (data) => {
-                    console.error(命令错误输出: ${data});
+                    console.error(`命令错误输出: ${data}`);
                 });
             });
         });
 
-
         client.on('error', (err) => {
-            reject(SSH 连接出错: ${err.message});
+            reject(`SSH 连接出错: ${err.message}`);
         });
 
         client.on('end', () => {
-            console.log(SSH 连接关闭: ${host});
+            console.log(`SSH 连接关闭: ${host}`);
         });
 
         client.connect({
@@ -105,6 +104,7 @@ async function connectSSH({ host, username, password }) {
         });
     });
 }
+
 
 
 
