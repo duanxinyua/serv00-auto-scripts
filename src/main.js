@@ -43,7 +43,7 @@ async function sendTelegramMessage(token, chatId, message) {
 }
 
 
-async function connectSSH({ host, username, password }) {
+async function connectSSH({ ssh , username, password }) {
     
     console.log(host);
     console.log(username);
@@ -136,7 +136,7 @@ async function processAccount(account) {
         if (isLoggedIn) {
             console.log(`账号 ${messagePrefix}${username} 登录成功！`);
             try {
-                const result = await connectSSH({ ssh, username, password });
+                const result = await connectSSH({ ssh , username, password });
                 console.log(result);
                 return `账号 ${messagePrefix}${username} 登录成功并保活成功。`;
             } catch (error) {
