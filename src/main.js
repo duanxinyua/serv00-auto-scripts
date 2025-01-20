@@ -44,6 +44,10 @@ async function sendTelegramMessage(token, chatId, message) {
 
 
 async function connectSSH({ host, username, password }) {
+    
+    console.log(host);
+    console.log(username);
+    console.log(password);
     return new Promise((resolve, reject) => {
         const client = new Client();
         client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
