@@ -4,6 +4,26 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pLimit from 'p-limit';
+import axios from 'axios';
+
+// 发送 Telegram 消息的函数
+async function sendTelegramMessage(token, chatId, message) {
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const payload = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML', // 可选的格式化方式，支持 HTML 或 Markdown
+    };
+
+    try {
+        const response = await axios.post(url, payload);
+        return response.data;
+    } catch (error) {
+        console.error('发送 Telegram 消息失败:', error.message);
+        throw new Error('发送 Telegram 消息失败');
+    }
+}
+
 
 // 连接 SSH 并执行命令
 async function connectSSH({ ssh, username, password }) {
