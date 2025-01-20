@@ -114,7 +114,7 @@ async function connectSSH({ ssh , username, password }) {
 
 // 处理单个账号
 async function processAccount(account) {
-    const { username, password, panel, addr, ssh } = account;
+    const { username, password, panel, ssh, addr } = account;
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     const url = `https://${panel}/login/?next=/`;
