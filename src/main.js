@@ -44,10 +44,8 @@ async function sendTelegramMessage(token, chatId, message) {
 
 
 async function connectSSH({ host, username, password }) {
-    console.log('47行,进入了connectSSH方法');
     return new Promise((resolve, reject) => {
         const client = new Client();
-        console.log('50行,开始ssh登陆');
         client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
             console.log('Keyboard Interactive 身份验证触发');
             finish([password]); // 使用密码作为响应
@@ -121,6 +119,7 @@ async function processAccount(account) {
         await page.goto(url);
         await page.type('#id_username', username);
         await page.type('#id_password', password);
+        await page.type('#id_ssh', ssh);
         await Promise.all([
             page.click('#submit'),
             page.waitForNavigation()
@@ -134,7 +133,7 @@ async function processAccount(account) {
         if (isLoggedIn) {
             console.log(`账号 ${messagePrefix}${username} 登录成功！`);
             try {
-                const result = await connectSSH({ host: sshHost, username, password });
+                const result = await connectSSH({ ssh, username, password });
                 console.log(result);
                 return `账号 ${messagePrefix}${username} 登录成功并保活成功。`;
             } catch (error) {
