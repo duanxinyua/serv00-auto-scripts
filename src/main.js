@@ -47,17 +47,21 @@ async function connectSSH({ host, username, password }) {
     return new Promise((resolve, reject) => {
         const client = new Client();
 
+        client.on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
+            console.log('Keyboard Interactive 身份验证触发');
+            finish([password]); // 使用密码作为响应
+        });
+
         client.on('ready', () => {
-            console.log(`成功登录到 ${host}`);
+            console.log(成功登录到 ${host});
             
             const command = 'bash <(curl -s https://raw.githubusercontent.com/duanxinyua/socks5-for-serv00/main/check_cron.sh)';
-            console.log(`正在执行命令: ${command}`);
+            console.log(正在执行命令: ${command});
             
-            // 执行命令
             client.exec(command, (err, stream) => {
                 if (err) {
-                    reject(`SSH 执行命令失败: ${err.message}`);
-                    client.end();
+                    reject(SSH 执行命令失败: ${err.message});
+                    client.end(); // 确保在错误情况下关闭连接
                     return;
                 }
         
@@ -67,40 +71,41 @@ async function connectSSH({ host, username, password }) {
                 });
         
                 stream.on('close', (code, signal) => {
-                    console.log(`命令执行完成，退出代码: ${code}, 信号: ${signal}`);
-                    console.log(`命令输出: ${output}`);
+                    console.log(命令执行完成，退出代码: ${code}, 信号: ${signal});
+                    console.log(命令输出: ${output});
                     client.end();
                     if (code === 0) {
                         resolve('保活成功！');
                     } else {
-                        reject(`命令执行失败，退出代码: ${code}`);
+                        reject(命令执行失败，退出代码: ${code});
                     }
                 });
         
                 stream.stderr.on('data', (data) => {
-                    console.error(`命令错误输出: ${data}`);
+                    console.error(命令错误输出: ${data});
                 });
             });
-        }).on('keyboard-interactive', (name, instructions, instructionsLang, prompts, finish) => {
-            console.log('触发 keyboard-interactive 认证');
-            console.log('提示信息:', prompts);
-            
-            // 假设服务器只要求提供密码
-            finish([password]); // 提供密码响应
-        }).on('error', (err) => {
-            console.error(`SSH 连接失败: ${err.message}`);
-            reject(err);
-        }).on('end', () => {
-            console.log(`SSH 连接已关闭: ${host}`);
-        }).connect({
+        });
+
+
+        client.on('error', (err) => {
+            reject(SSH 连接出错: ${err.message});
+        });
+
+        client.on('end', () => {
+            console.log(SSH 连接关闭: ${host});
+        });
+
+        client.connect({
             host,
-            port: 22, // 默认端口
+            port: 22, // 默认端口，可以根据需要调整
             username,
             password,
-            tryKeyboard: true, // 启用 keyboard-interactive 认证
+            tryKeyboard: true, // 启用 Keyboard Interactive
         });
     });
 }
+
 
 
 
