@@ -59,6 +59,7 @@ async function sendTelegramMessage(token, chatId, message) {
             }
             await page.type('#id_username', username);
             await page.type('#id_password', password);
+            await page.type('#id_addr', addr);
 
             const loginButton = await page.$('#submit');
             if (loginButton) {
@@ -77,15 +78,15 @@ async function sendTelegramMessage(token, chatId, message) {
             const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
 
             if (isLoggedIn) {
-                console.log(`账户${accountIndex} (${username}) 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
-                results.push(`账户${accountIndex} (${username}) ✅ 登录成功`);
+                console.log(`账户${accountIndex} (${username}) - (${addr}) 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
+                results.push(`账户${accountIndex} (${username}) - (${addr})  ✅ 登录成功`);
             } else {
-                console.error(`账户${accountIndex} (${username}) 登录失败，请检查账号和密码是否正确。`);
-                results.push(`账户${accountIndex} (${username}) ❌ 登录失败`);
+                console.error(`账户${accountIndex} (${username}) - (${addr})  登录失败，请检查账号和密码是否正确。`);
+                results.push(`账户${accountIndex} (${username}) - (${addr})  ❌ 登录失败`);
             }
         } catch (error) {
-            console.error(`账户${accountIndex} (${username}) 登录时出现错误: ${error}`);
-            results.push(`账户${accountIndex} (${username}) ⚠️ 登录错误: ${error.message}`);
+            console.error(`账户${accountIndex} (${username}) - (${addr})  登录时出现错误: ${error}`);
+            results.push(`账户${accountIndex} (${username}) - (${addr}) ⚠️ 登录错误: ${error.message}`);
         } finally {
             await page.close();
             await browser.close();
