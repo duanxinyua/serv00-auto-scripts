@@ -32,7 +32,7 @@ async function sendTelegramMessage(token, chatId, message) {
     let results = []; // 存储登录结果
 
     for (let i = 0; i < accounts.length; i++) {
-        const { username, password, panel, ssh, addr, } = accounts[i];
+        const { username, password, panel, ssh, addr } = accounts[i];
         const accountIndex = i + 1; // 从 1 开始计数
 
         const browser = await puppeteer.launch({
@@ -59,6 +59,8 @@ async function sendTelegramMessage(token, chatId, message) {
             }
             await page.type('#id_username', username);
             await page.type('#id_password', password);
+            await page.type('#id_panel', panel);
+            await page.type('#id_ssh', ssh);
             await page.type('#id_addr', addr);
 
             const loginButton = await page.$('#submit');
