@@ -28,9 +28,10 @@ async function sendTelegramMessage(token, chatId, message) {
     const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../accounts.json'), 'utf-8'));
     const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    const nowTime = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
 
-    let results = []; // 存储登录结果
-    results.push(`北京时间 ${nowBeijing} 登录结果：`);
+    let results = [`北京时间 ${nowTime} 登录结果：`]; // 先加入时间戳
+
 
     for (let i = 0; i < accounts.length; i++) {
         const { username, password, panel, ssh, addr } = accounts[i];
