@@ -87,8 +87,8 @@ async function sendTelegramMessage(token, chatId, message) {
                 results.push(`账户${accountIndex} (${username}) - (${addr})  ❌ 登录失败`);
             }
         } catch (error) {
-            console.error(`账户${accountIndex} (${username}) - (${addr})  登录时出现错误: ${error}`);
-            results.push(`账户${accountIndex} (${username}) - (${addr}) ⚠️ 登录错误: ${error.message}`);
+            console.error(`账户${accountIndex} (${username}) 登录时出现错误: ${error}`);
+            results.push(`账户${accountIndex} (${username}) ⚠️ 登录错误: ${error.message}`);
         } finally {
             await page.close();
             await browser.close();
