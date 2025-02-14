@@ -59,9 +59,6 @@ async function sendTelegramMessage(token, chatId, message) {
             }
             await page.type('#id_username', username);
             await page.type('#id_password', password);
-            await page.type('#id_panel', panel);
-            await page.type('#id_ssh', ssh);
-            await page.type('#id_addr', addr);
 
             const loginButton = await page.$('#submit');
             if (loginButton) {
