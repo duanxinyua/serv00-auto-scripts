@@ -30,6 +30,7 @@ async function sendTelegramMessage(token, chatId, message) {
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
 
     let results = []; // 存储登录结果
+    results.push(`北京时间 ${nowBeijing} 登录结果：`);
 
     for (let i = 0; i < accounts.length; i++) {
         const { username, password, panel, ssh, addr } = accounts[i];
@@ -77,7 +78,7 @@ async function sendTelegramMessage(token, chatId, message) {
             const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
 
             if (isLoggedIn) {
-                console.log(`账户${accountIndex} (${username}) - (${addr}) 于北京时间 ${nowBeijing}（UTC时间 ${nowUtc}）登录成功！`);
+                console.log(`账户${accountIndex} (${username}) - (${addr}) 于北京时间 ${nowBeijing} 登录成功！`);
                 results.push(`账户${accountIndex} (${username}) - (${addr})  ✅ 登录成功`);
             } else {
                 console.error(`账户${accountIndex} (${username}) - (${addr})  登录失败，请检查账号和密码是否正确。`);
