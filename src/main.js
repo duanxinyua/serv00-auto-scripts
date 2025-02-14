@@ -30,7 +30,7 @@ async function sendTelegramMessage(token, chatId, message) {
     const telegramChatId = process.env.TELEGRAM_CHAT_ID;
     const nowTime = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
 
-    let results = [`北京时间 ${nowTime} 登录结果：`]; // 先加入时间戳
+    let results = [];
 
 
     for (let i = 0; i < accounts.length; i++) {
@@ -99,7 +99,7 @@ async function sendTelegramMessage(token, chatId, message) {
 
     // 所有账号登录完成后，发送汇总消息
     if (telegramToken && telegramChatId) {
-        const summaryMessage = `✅ 所有账号登录完成：\n\n${results.join('\n')}`;
+        const summaryMessage = `✅ 北京时间 ${nowTime} 所有账号登录完成：\n\n${results.join('\n')}`;
         await sendTelegramMessage(telegramToken, telegramChatId, summaryMessage);
     }
 })();
