@@ -62,14 +62,17 @@ async function sendTelegramMessage(token, chatId, message) {
             await page.type('#id_username', username);
             await page.type('#id_password', password);
 
-            const loginButton = await page.$('#submit');
+            // const loginButton = await page.$('login-form__button');
+            const loginButton = await page.$x("//button[contains(., '登入')]");
+
             if (loginButton) {
                 await loginButton.click();
             } else {
                 throw new Error('无法找到登录按钮');
             }
 
-            await page.waitForNavigation();
+            // await page.waitForNavigation();
+            await loginButton[0].click();
 
             const isLoggedIn = await page.evaluate(() => {
                 return document.querySelector('a[href="/logout/"]') !== null;
