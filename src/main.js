@@ -78,8 +78,10 @@ async function sendTelegramMessage(token, chatId, message) {
             await page.waitForNavigation();
 
             const isLoggedIn = await page.evaluate(() => {
-                return document.querySelector('a[href="/login/"]') !== null;
+                // 登录成功后通常会出现“退出登录”按钮
+                return document.querySelector('a[href="/logout/"]') !== null;
             });
+
 
             const nowUtc = formatToISO(new Date());
             const nowBeijing = formatToISO(new Date(new Date().getTime() + 8 * 60 * 60 * 1000));
