@@ -78,7 +78,7 @@ async function sendTelegramMessage(token, chatId, message) {
             await page.waitForNavigation();
 
             const isLoggedIn = await page.evaluate(() => {
-                return document.querySelector('a[href="/logout/"]') !== null;
+                return document.querySelector('a[href="/login/"]') !== null;
             });
 
             const nowUtc = formatToISO(new Date());
